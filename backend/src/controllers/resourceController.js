@@ -1,6 +1,16 @@
 import ApiError from '../utils/apiError.js';
 import { normalizeList, toText } from '../utils/normalize.js';
 
+function toDataUrl(file) {
+  if (!file) {
+    return '';
+  }
+
+  const mimeType = file.mimetype || 'application/octet-stream';
+  const base64 = file.buffer.toString('base64');
+  return `data:${mimeType};base64,${base64}`;
+}
+
 function toBoolean(value) {
   if (value === undefined) {
     return undefined;
@@ -64,12 +74,13 @@ function buildPayload(request, options) {
 
   if (options.singleFileField) {
     if (request.file) {
-      payload[options.singleFileField] = `/uploads/${request.file.filename}`;
+      payload[options.singleFileField] = toDataUrl(request.file);
     }
 
     if (request.files && request.files[options.singleFileField]?.[0]) {
-      payload[options.singleFileField] =
-        `/uploads/${request.files[options.singleFileField][0].filename}`;
+      payload[options.singleFileField] = toDataUrl(
+        request.files[options.singleFileField][0]
+      );
     }
   }
 
@@ -77,7 +88,7 @@ function buildPayload(request, options) {
     for (const field of options.multiFileFields) {
       const files = request.files[field] || [];
       if (files.length > 0) {
-        payload[field] = files.map((file) => `/uploads/${file.filename}`);
+        payload[field] = files.map((file) => toDataUrl(file));
       }
     }
   }
