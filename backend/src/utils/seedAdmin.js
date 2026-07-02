@@ -10,6 +10,10 @@ export async function seedDefaultAdmin() {
   const existingAdmin = await Admin.findOne({ email: defaultEmail });
 
   if (existingAdmin) {
+    existingAdmin.name = defaultName;
+    existingAdmin.password = defaultPassword;
+    existingAdmin.role = 'admin';
+    await existingAdmin.save();
     return existingAdmin;
   }
 
