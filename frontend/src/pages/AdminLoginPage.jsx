@@ -5,6 +5,18 @@ import Card from '../components/ui/Card';
 import { useAuth } from '../context/AuthContext';
 import { postResource } from '../services/api';
 
+function formatLoginError(error) {
+  const status = error?.response?.status;
+  const backendMessage =
+    error?.response?.data?.message || error?.message || 'Unknown error';
+
+  if (status) {
+    return `Sign in failed (${status}): ${backendMessage}`;
+  }
+
+  return `Sign in failed: ${backendMessage}`;
+}
+
 export default function AdminLoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
@@ -21,13 +33,18 @@ export default function AdminLoginPage() {
     event.preventDefault();
     setMessage('');
 
+    if (!form.email || !form.password) {
+      setMessage('Please enter both email and password.');
+      return;
+    }
+
     try {
       const response = await postResource('/auth/login', form);
       login(response.token);
       const redirectTo = location.state?.from?.pathname || '/admin';
       navigate(redirectTo, { replace: true });
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to sign in.');
+      setMessage(formatLoginError(error));
     }
   }
 
