@@ -1,23 +1,9 @@
-let runtimeReadyPromise;
+import app from '../backend/src/app.js';
+import { ensureRuntimeReady } from '../backend/src/config/runtime.js';
 
-async function loadBackend() {
-  const [{ default: app }, { ensureRuntimeReady }] = await Promise.all([
-    import('../backend/src/app.js'),
-    import('../backend/src/config/runtime.js')
-  ]);
-
-  if (!runtimeReadyPromise) {
-    runtimeReadyPromise = ensureRuntimeReady();
-  }
-
-  await runtimeReadyPromise;
-
-  return app;
-}
-
-module.exports = async function handler(request, response) {
+export default async function handler(request, response) {
   try {
-    const app = await loadBackend();
+    await ensureRuntimeReady();
     return app(request, response);
   } catch (error) {
     console.error('TourMedX API runtime setup failed:', error);
@@ -26,4 +12,4 @@ module.exports = async function handler(request, response) {
         'Backend startup failed. Check MongoDB and Vercel environment variables.'
     });
   }
-};
+}
