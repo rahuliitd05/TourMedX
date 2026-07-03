@@ -22,3 +22,4 @@ This repo is configured to deploy the React frontend and Express API together on
 3. Deploy with the default build command from `vercel.json`.
 4. The frontend will call the API on the same Vercel domain through `/api`.
 5. If you deploy the frontend and backend as separate Vercel projects, set `VITE_API_BASE_URL` in the frontend project to the backend API URL, for example `https://your-backend.vercel.app/api`.
+6. Use a real random value for `JWT_SECRET`; the example placeholder in `.env.example` is not meant for production.
