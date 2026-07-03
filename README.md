@@ -21,3 +21,4 @@ This repo is configured to deploy the React frontend and Express API together on
 2. Add `MONGODB_URI`, `JWT_SECRET`, `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in Vercel environment variables.
 3. Deploy with the default build command from `vercel.json`.
 4. The frontend will call the API on the same Vercel domain through `/api`.
+5. If you deploy the frontend and backend as separate Vercel projects, set `VITE_API_BASE_URL` in the frontend project to the backend API URL, for example `https://your-backend.vercel.app/api`.
