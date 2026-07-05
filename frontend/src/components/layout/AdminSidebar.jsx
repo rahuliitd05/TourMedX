@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const adminLinks = [
   { label: 'Dashboard', to: '/admin' },
@@ -14,6 +15,14 @@ const adminLinks = [
 ];
 
 export default function AdminSidebar() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate('/admin/login');
+  }
+
   return (
     <aside className="tmx-admin-sidebar">
       <div>
@@ -32,6 +41,19 @@ export default function AdminSidebar() {
           </NavLink>
         ))}
       </nav>
+      <button
+        onClick={handleLogout}
+        className="tmx-button tmx-button--danger"
+        style={{
+          width: '100%',
+          marginTop: '1.25rem',
+          minHeight: '42px',
+          padding: '0.6rem 1rem',
+          fontSize: '0.95rem'
+        }}
+      >
+        Sign Out
+      </button>
     </aside>
   );
 }
