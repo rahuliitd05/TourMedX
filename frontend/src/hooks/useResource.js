@@ -11,14 +11,33 @@ export function useResource(endpoint, fallbackValue = []) {
 
     async function load() {
       try {
-        const nextData = await fetchCollection(endpoint, fallbackValue);
-        const items = Array.isArray(nextData)
+        const nextData = await fetchCollection(endpoint, null);
+
+        // API returns paginated { items, page, total } or plain array
+        const apiItems = Array.isArray(nextData)
           ? nextData
           : Array.isArray(nextData?.items)
           ? nextData.items
-          : fallbackValue;
+          : null;
+
         if (mounted) {
-          setData(items);
+          if (!apiItems) {
+            // API failed entirely — use fallback
+            setData(fallbackValue);
+          } else {
+            // Merge: DB items (with _id) take priority.
+            // Show fallback items not yet in DB alongside DB items.
+            const apiKeySet = new Set(
+              apiItems
+                .map((i) => i.slug || i.name || i.title || i.packageName)
+                .filter(Boolean)
+            );
+            const fallbackOnly = (fallbackValue || []).filter((f) => {
+              const key = f.slug || f.name || f.title || f.packageName;
+              return !apiKeySet.has(key);
+            });
+            setData([...apiItems, ...fallbackOnly]);
+          }
         }
       } catch (loadError) {
         if (mounted) {

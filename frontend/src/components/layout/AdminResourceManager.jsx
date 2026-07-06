@@ -105,13 +105,29 @@ export default function AdminResourceManager({
           payload
         );
         setData((current) =>
-          current.map((item) => (item._id === editingItem._id ? updated : item))
+          current.map((item) => (item._id === updated._id ? updated : item))
         );
         setMessage(`${title} updated successfully.`);
       } else {
         const created = await postResource(endpoint, payload);
-        setData((current) => [created, ...current]);
-        setMessage(`${title} created successfully.`);
+        setData((current) => {
+          // Replace the matching fallback item (no _id) or existing DB item
+          const key = created.slug || created.name || created.title || created.packageName;
+          const matchIndex = current.findIndex(
+            (item) =>
+              item._id === created._id ||
+              (!item._id &&
+                key &&
+                (item.slug === key || item.name === key || item.title === key || item.packageName === key))
+          );
+          if (matchIndex >= 0) {
+            const next = [...current];
+            next[matchIndex] = created;
+            return next;
+          }
+          return [created, ...current];
+        });
+        setMessage(`${title} saved successfully.`);
       }
       resetForm();
     } catch (error) {

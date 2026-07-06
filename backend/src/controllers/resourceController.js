@@ -162,14 +162,34 @@ export default function createResourceController(Model, options = {}) {
     },
 
     async createOne(request, response, next) {
+      let payload;
       try {
-        const payload = buildPayload(request, options);
+        payload = buildPayload(request, options);
         const item = await Model.create(payload);
         response.status(201).json(item);
       } catch (error) {
+        // If duplicate key and an upsert field is configured, update the existing record
+        if (error.code === 11000 && options.upsertField && payload) {
+          try {
+            const upsertValue = payload[options.upsertField];
+            if (upsertValue) {
+              const existing = await Model.findOneAndUpdate(
+                { [options.upsertField]: upsertValue },
+                { $set: payload },
+                { new: true }
+              );
+              if (existing) {
+                return response.status(200).json(existing);
+              }
+            }
+          } catch (_upsertError) {
+            // fall through to original error handler
+          }
+        }
         next(error);
       }
     },
+
 
     async updateOne(request, response, next) {
       try {

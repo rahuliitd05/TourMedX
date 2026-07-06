@@ -5,5 +5,7 @@ export default createResourceRouter(Treatment, {
   searchFields: ['title', 'slug', 'overview'],
   arrayFields: ['benefits'],
   faqField: 'faqs',
-  faqTargetField: 'faqs'
+  faqTargetField: 'faqs',
+  upsertField: 'slug'
 });
+
