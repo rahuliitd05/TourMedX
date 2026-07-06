@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { fetchCollection } from '../services/api';
 
+/**
+ * Derive a stable string key for an item regardless of model shape.
+ * Treatments use slug, doctors/hospitals use name, packages use packageName.
+ */
+function itemKey(item) {
+  return item.slug ?? item.name ?? item.title ?? item.packageName ?? null;
+}
+
 export function useResource(endpoint, fallbackValue = []) {
   const [data, setData] = useState(fallbackValue);
   const [loading, setLoading] = useState(true);
@@ -11,38 +19,31 @@ export function useResource(endpoint, fallbackValue = []) {
 
     async function load() {
       try {
-        const nextData = await fetchCollection(endpoint, null);
+        const response = await fetchCollection(endpoint, null);
 
-        // API returns paginated { items, page, total } or plain array
-        const apiItems = Array.isArray(nextData)
-          ? nextData
-          : Array.isArray(nextData?.items)
-          ? nextData.items
-          : null;
+        // API returns paginated { items, page, total } or a plain array
+        const dbItems = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.items)
+          ? response.items
+          : [];
 
         if (mounted) {
-          if (!apiItems) {
-            // API failed entirely — use fallback
-            setData(fallbackValue);
-          } else {
-            // Merge: DB items (with _id) take priority.
-            // Show fallback items not yet in DB alongside DB items.
-            const apiKeySet = new Set(
-              apiItems
-                .map((i) => i.slug || i.name || i.title || i.packageName)
-                .filter(Boolean)
-            );
-            const fallbackOnly = (fallbackValue || []).filter((f) => {
-              const key = f.slug || f.name || f.title || f.packageName;
-              return !apiKeySet.has(key);
-            });
-            setData([...apiItems, ...fallbackOnly]);
-          }
+          // Build a set of keys from DB items so we can skip duplicates in fallback
+          const dbKeySet = new Set(dbItems.map(itemKey).filter(Boolean));
+
+          // Append fallback items that are not yet in the DB
+          const unsynced = (fallbackValue ?? []).filter((f) => {
+            const k = itemKey(f);
+            return k != null && !dbKeySet.has(k);
+          });
+
+          setData([...dbItems, ...unsynced]);
         }
       } catch (loadError) {
         if (mounted) {
           setError(loadError.message || 'Unable to load resource');
-          setData(fallbackValue);
+          setData(fallbackValue ?? []);
         }
       } finally {
         if (mounted) {

@@ -204,17 +204,23 @@ export default function AdminResourceManager({
           {filteredData.map((item) => (
             <article
               className="tmx-card tmx-admin-list__item"
-              key={item._id || item.name}
+              key={item._id ?? item.slug ?? item.title ?? item.name ?? item.packageName}
             >
               <div>
                 <h3>{item.name || item.title || item.packageName}</h3>
                 <p>
                   {item.specialty ||
+                    item.overview ||
                     item.about ||
                     item.summary ||
                     item.description ||
                     ''}
                 </p>
+                {!item._id && (
+                  <span style={{ fontSize: '0.75rem', color: '#888' }}>
+                    Not saved to DB yet
+                  </span>
+                )}
               </div>
               <div className="tmx-admin-list__actions">
                 <Button
@@ -224,13 +230,15 @@ export default function AdminResourceManager({
                 >
                   Edit
                 </Button>
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => handleDelete(item._id)}
-                >
-                  Delete
-                </Button>
+                {item._id && (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => handleDelete(item._id)}
+                  >
+                    Delete
+                  </Button>
+                )}
               </div>
             </article>
           ))}
