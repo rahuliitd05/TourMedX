@@ -177,7 +177,7 @@ export default function createResourceController(Model, options = {}) {
         const item = await Model.findByIdAndUpdate(
           request.params.id,
           { $set: payload },
-          { new: true, runValidators: true }
+          { new: true }
         );
 
         if (!item) {
