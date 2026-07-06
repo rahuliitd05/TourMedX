@@ -30,8 +30,21 @@ export default function AdminResourceManager({
   useEffect(() => {
     if (editingItem) {
       const nextForm = fields.reduce((accumulator, field) => {
-        accumulator[field.name] =
-          editingItem[field.name] ?? (field.multiple ? [] : '');
+        const value = editingItem[field.name];
+
+        // Serialize FAQ-style arrays [{question, answer}] → "Q|A" lines for the textarea
+        if (field.type === 'textarea' && Array.isArray(value)) {
+          if (value.length > 0 && typeof value[0] === 'object') {
+            accumulator[field.name] = value
+              .map((item) => `${item.question || ''}|${item.answer || ''}`)
+              .join('\n');
+          } else {
+            accumulator[field.name] = value.join('\n');
+          }
+        } else {
+          accumulator[field.name] = value ?? (field.multiple ? [] : '');
+        }
+
         return accumulator;
       }, {});
       setForm(nextForm);

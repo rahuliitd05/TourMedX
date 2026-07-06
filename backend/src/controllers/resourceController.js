@@ -174,10 +174,11 @@ export default function createResourceController(Model, options = {}) {
     async updateOne(request, response, next) {
       try {
         const payload = buildPayload(request, options);
-        const item = await Model.findByIdAndUpdate(request.params.id, payload, {
-          new: true,
-          runValidators: true
-        });
+        const item = await Model.findByIdAndUpdate(
+          request.params.id,
+          { $set: payload },
+          { new: true, runValidators: true }
+        );
 
         if (!item) {
           return next(new ApiError(404, `${Model.modelName} not found`));
