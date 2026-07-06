@@ -12,8 +12,13 @@ export function useResource(endpoint, fallbackValue = []) {
     async function load() {
       try {
         const nextData = await fetchCollection(endpoint, fallbackValue);
+        const items = Array.isArray(nextData)
+          ? nextData
+          : Array.isArray(nextData?.items)
+          ? nextData.items
+          : fallbackValue;
         if (mounted) {
-          setData(Array.isArray(nextData) ? nextData : fallbackValue);
+          setData(items);
         }
       } catch (loadError) {
         if (mounted) {
