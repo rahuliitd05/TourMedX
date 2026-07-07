@@ -16,6 +16,7 @@ export default function Footer() {
         <Link to="/refund-and-cancellation-policy">
           Refund & Cancellation Policy
         </Link>
+        <Link to="/admin">Admin Portal</Link>
       </div>
     </footer>
   );

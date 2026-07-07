@@ -21,7 +21,7 @@ export default function AdminResourceManager({
   fields,
   searchFields = []
 }) {
-  const { data, loading, setData } = useResource(endpoint, fallbackData);
+  const { data, loading, error, setData } = useResource(endpoint, fallbackData);
   const [query, setQuery] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState(() => getInitialForm(fields));
@@ -50,6 +50,14 @@ export default function AdminResourceManager({
       setForm(nextForm);
     }
   }, [editingItem, fields]);
+
+  // Reset form and message state when the module/endpoint changes
+  useEffect(() => {
+    resetForm();
+    setQuery('');
+    setMessage('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint]);
 
   const filteredData = useMemo(() => {
     const lowerQuery = query.trim().toLowerCase();
@@ -89,7 +97,11 @@ export default function AdminResourceManager({
 
     fields.forEach((field) => {
       const value = form[field.name];
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null) {
+        // Skip empty file fields to prevent overwriting existing assets
+        if (field.type === 'file' && value === '') {
+          return;
+        }
         if (hasFileField) {
           payload.append(field.name, value);
         } else {
@@ -112,13 +124,13 @@ export default function AdminResourceManager({
         const created = await postResource(endpoint, payload);
         setData((current) => {
           // Replace the matching fallback item (no _id) or existing DB item
-          const key = created.slug || created.name || created.title || created.packageName;
+          const key = created.slug || created.name || created.title || created.packageName || created.question;
           const matchIndex = current.findIndex(
             (item) =>
               item._id === created._id ||
               (!item._id &&
                 key &&
-                (item.slug === key || item.name === key || item.title === key || item.packageName === key))
+                (item.slug === key || item.name === key || item.title === key || item.packageName === key || item.question === key))
           );
           if (matchIndex >= 0) {
             const next = [...current];
@@ -146,6 +158,22 @@ export default function AdminResourceManager({
 
   return (
     <section className="tmx-admin-module">
+      {error && (
+        <div
+          className="tmx-alert tmx-alert--warning"
+          style={{
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            backgroundColor: '#fff3cd',
+            color: '#856404',
+            border: '1px solid #ffeeba',
+            borderRadius: '6px',
+            fontSize: '0.95rem'
+          }}
+        >
+          <strong>Database Connection Warning:</strong> {error}. You are currently viewing offline fallback data. Changes cannot be saved to the database.
+        </div>
+      )}
       <div className="tmx-admin-module__header">
         <div>
           <p className="tmx-eyebrow">Manage content</p>
@@ -172,12 +200,30 @@ export default function AdminResourceManager({
                   onChange={updateField}
                 />
               ) : field.type === 'file' ? (
-                <input
-                  name={field.name}
-                  type="file"
-                  accept={field.accept || 'image/*'}
-                  onChange={updateField}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    name={field.name}
+                    type="file"
+                    accept={field.accept || 'image/*'}
+                    onChange={updateField}
+                  />
+                  {typeof form[field.name] === 'string' && form[field.name] && (
+                    <div className="tmx-image-preview" style={{ marginTop: '0.25rem' }}>
+                      <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>Current Image:</p>
+                      <img
+                        src={form[field.name]}
+                        alt={`${field.label} preview`}
+                        style={{
+                          maxWidth: '120px',
+                          maxHeight: '120px',
+                          borderRadius: '6px',
+                          border: '1px solid #ddd',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               ) : (
                 <input
                   name={field.name}

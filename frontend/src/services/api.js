@@ -6,7 +6,7 @@ const fallbackBaseUrl = import.meta.env.DEV
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || fallbackBaseUrl,
-  timeout: 12000
+  timeout: 60000
 });
 
 api.interceptors.request.use((config) => {

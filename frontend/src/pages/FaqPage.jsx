@@ -1,9 +1,13 @@
 import PageHeader from '../components/navigation/PageHeader';
 import SectionTitle from '../components/ui/SectionTitle';
 import Accordion from '../components/ui/Accordion';
+import Loader from '../components/ui/Loader';
+import { useResource } from '../hooks/useResource';
 import { faqItems } from '../data/siteContent';
 
 export default function FaqPage() {
+  const { data: list, loading } = useResource('/faqs', faqItems);
+
   return (
     <div className="tmx-page">
       <PageHeader
@@ -13,7 +17,7 @@ export default function FaqPage() {
       />
       <section className="tmx-section">
         <SectionTitle title="Help center" />
-        <Accordion items={faqItems} />
+        {loading ? <Loader /> : <Accordion items={list} />}
       </section>
     </div>
   );

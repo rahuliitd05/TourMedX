@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { fetchCollection } from '../services/api';
+import api from '../services/api';
 
 /**
  * Derive a stable string key for an item regardless of model shape.
  * Treatments use slug, doctors/hospitals use name, packages use packageName.
  */
 function itemKey(item) {
-  return item.slug ?? item.name ?? item.title ?? item.packageName ?? null;
+  return item.slug ?? item.name ?? item.title ?? item.packageName ?? item.question ?? null;
 }
 
 export function useResource(endpoint, fallbackValue = []) {
@@ -19,13 +19,15 @@ export function useResource(endpoint, fallbackValue = []) {
 
     async function load() {
       try {
-        const response = await fetchCollection(endpoint, null);
+        setError('');
+        const response = await api.get(endpoint);
+        const dataPayload = response.data;
 
         // API returns paginated { items, page, total } or a plain array
-        const dbItems = Array.isArray(response)
-          ? response
-          : Array.isArray(response?.items)
-          ? response.items
+        const dbItems = Array.isArray(dataPayload)
+          ? dataPayload
+          : Array.isArray(dataPayload?.items)
+          ? dataPayload.items
           : [];
 
         if (mounted) {
@@ -42,7 +44,8 @@ export function useResource(endpoint, fallbackValue = []) {
         }
       } catch (loadError) {
         if (mounted) {
-          setError(loadError.message || 'Unable to load resource');
+          const errMsg = loadError.response?.data?.message || loadError.message || 'Unable to load resource';
+          setError(errMsg);
           setData(fallbackValue ?? []);
         }
       } finally {

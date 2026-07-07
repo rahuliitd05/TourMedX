@@ -7,6 +7,7 @@ import Accordion from '../components/ui/Accordion';
 import TestimonialCard from '../components/ui/TestimonialCard';
 import ContactForm from '../components/forms/ContactForm';
 import Button from '../components/ui/Button';
+import { useResource } from '../hooks/useResource';
 import {
   heroHighlights,
   whyEgyptCards,
@@ -32,6 +33,13 @@ const heroMedia = [
 ];
 
 export default function HomePage() {
+  const { data: testimonialsList } = useResource('/testimonials', testimonials);
+  const { data: faqsList } = useResource('/faqs', faqItems);
+  const { data: treatmentsList } = useResource('/treatments', specialtyCards.map(item => ({
+    ...item,
+    overview: item.summary
+  })));
+
   return (
     <div className="tmx-page tmx-page--home">
       <Hero
@@ -86,7 +94,7 @@ export default function HomePage() {
         </div>
         <Card title="Our Focus Areas">
           <div className="tmx-pill-list">
-            {specialtyCards.slice(0, 5).map((item) => (
+            {treatmentsList.slice(0, 5).map((item) => (
               <span key={item.slug}>{item.title}</span>
             ))}
           </div>
@@ -100,8 +108,8 @@ export default function HomePage() {
           description="Each specialty links to a dedicated treatment page with an overview, recovery guidance, procedure details, and FAQs."
         />
         <div className="tmx-grid tmx-grid--3">
-          {specialtyCards.map((item) => (
-            <Card key={item.slug} title={item.title} description={item.summary}>
+          {treatmentsList.map((item) => (
+            <Card key={item.slug} title={item.title} description={item.overview || item.summary}>
               <Button
                 as={Link}
                 to={`/treatments/${item.slug}`}
@@ -142,7 +150,7 @@ export default function HomePage() {
           title="What patients say about the experience"
         />
         <div className="tmx-grid tmx-grid--3">
-          {testimonials.map((testimonial) => (
+          {testimonialsList.map((testimonial) => (
             <TestimonialCard key={testimonial.name} testimonial={testimonial} />
           ))}
         </div>
@@ -154,7 +162,7 @@ export default function HomePage() {
             eyebrow="FAQ"
             title="Common questions from international patients"
           />
-          <Accordion items={faqItems} />
+          <Accordion items={faqsList} />
         </div>
         <Card
           title="Ready to plan your care?"
@@ -173,6 +181,34 @@ export default function HomePage() {
           description="Submit your details and we’ll help coordinate the right specialist, hospital, and support plan."
         />
         <ContactForm submitLabel="Submit Request" />
+      </section>
+
+      <section
+        className="tmx-section"
+        style={{
+          textAlign: 'center',
+          padding: '4rem 1.5rem',
+          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+          borderTop: '1px solid rgba(0, 0, 0, 0.05)'
+        }}
+      >
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <p
+            className="tmx-eyebrow"
+            style={{ color: '#0d6efd', fontWeight: '600', letterSpacing: '0.1em' }}
+          >
+            Administration
+          </p>
+          <h2 style={{ fontSize: '1.75rem', color: '#212529', marginBottom: '0.75rem' }}>
+            System Administrator Access
+          </h2>
+          <p style={{ color: '#6c757d', marginBottom: '1.5rem', fontSize: '1rem' }}>
+            Manage doctors, hospitals, treatments, tourism packages, and user contact entries.
+          </p>
+          <Button as={Link} to="/admin" variant="secondary">
+            Access Admin Console
+          </Button>
+        </div>
       </section>
     </div>
   );

@@ -1,22 +1,37 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import PageHeader from '../components/navigation/PageHeader';
 import SectionTitle from '../components/ui/SectionTitle';
 import Card from '../components/ui/Card';
 import Accordion from '../components/ui/Accordion';
 import Button from '../components/ui/Button';
+import Loader from '../components/ui/Loader';
+import { useResource } from '../hooks/useResource';
 import { treatmentDetails } from '../data/siteContent';
 
 export default function TreatmentDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const treatment = treatmentDetails[slug];
+
+  const fallbackList = useMemo(() => {
+    return Object.entries(treatmentDetails).map(([key, val]) => ({
+      ...val,
+      slug: key
+    }));
+  }, []);
+
+  const { data: treatments, loading } = useResource('/treatments', fallbackList);
+  const treatment = treatments.find((t) => t.slug === slug);
 
   useEffect(() => {
-    if (!treatment) {
+    if (!loading && !treatment) {
       navigate('/treatments', { replace: true });
     }
-  }, [navigate, treatment]);
+  }, [navigate, treatment, loading]);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   if (!treatment) {
     return null;

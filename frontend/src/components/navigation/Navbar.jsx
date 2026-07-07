@@ -20,7 +20,10 @@ export default function Navbar() {
           </NavLink>
         ))}
       </nav>
-      <div className="tmx-navbar__actions">
+      <div className="tmx-navbar__actions" style={{ display: 'flex', gap: '0.75rem' }}>
+        <Button as={NavLink} to="/admin" variant="secondary">
+          Admin Portal
+        </Button>
         <Button as={NavLink} to="/contact">
           Book Free Consultation
         </Button>
